@@ -1,0 +1,70 @@
+---
+- name: Bootstrap server for future ansible runs
+
+  vars_files:
+    - defaults/main.yml
+
+  hosts: "{{ hosts_to_bootstrap }}"
+  remote_user: attaj259
+  become: yes
+  
+  vars:
+    user_name: ansible
+    user_pass: $6$somesalt$a6TNVzqJscGfWGRxg09hlKQmgYhKWNvzXaN5ZzibynRz1JZpWam43pb/xMtCDdh3dkCE8F3FIP.ovFUAaErmz0 
+    #somepassword // somesalt
+
+  tasks:
+  - name: Upgrade all packages
+    yum: 
+      name: '*'
+      state: latest
+      update_cache: yes
+    async: 600
+    poll: 5
+    notify: reboot server
+  
+  - name: Add my user
+    user: >
+      name={{ user_name }}
+      password={{ user_pass }}
+      shell=/bin/bash
+      groups=wheel
+      append=yes
+      generate_ssh_key=yes
+      ssh_key_bits=2048
+      state=present
+
+  - name: Add my workstation user's public key to the new user
+    authorized_key:
+      user: "{{ user_name }}"
+      key: "{{ lookup('file', 'certificates/id_rsa.pub') }}"
+      state: present
+
+  - name: Remove root SSH access
+    lineinfile: 
+      dest: /etc/ssh/sshd_config 
+      regexp: "^PermitRootLogin" 
+      line: "PermitRootLogin no" 
+      state: present
+    #notify: restart ssh
+
+  - name: Remove password SSH access
+    lineinfile: 
+      dest: /etc/ssh/sshd_config 
+      regexp: "^PasswordAuthentication" 
+      line: "PasswordAuthentication no" 
+      state: present
+
+  #- name: Reboot the server
+  #  command: /sbin/reboot 
+
+  handlers:
+
+  - name: restart ssh
+    service: name=ssh state=restarted 
+
+  - name: reboot server
+    command: /sbin/reboot
+
+  - name: Install screend
+    yum: name=screen state=latest
