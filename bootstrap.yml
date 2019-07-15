@@ -14,13 +14,18 @@
     #somepassword // somesalt
 
   tasks:
+  - name: Install screen
+    yum:
+      name: "screen"
+      state: present      
+
   - name: Upgrade all packages
     yum: 
       name: '*'
       state: latest
       update_cache: yes
-    async: 600
-    poll: 5
+    #async: 600
+    #poll: 5
     notify: reboot server
   
   - name: Add my user
@@ -46,7 +51,7 @@
       regexp: "^PermitRootLogin" 
       line: "PermitRootLogin no" 
       state: present
-    #notify: restart ssh
+    notify: restart ssh
 
   - name: Remove password SSH access
     lineinfile: 
@@ -54,9 +59,6 @@
       regexp: "^PasswordAuthentication" 
       line: "PasswordAuthentication no" 
       state: present
-
-  #- name: Reboot the server
-  #  command: /sbin/reboot 
 
   handlers:
 
