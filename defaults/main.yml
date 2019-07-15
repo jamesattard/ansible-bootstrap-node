@@ -1,2 +1,3 @@
 ---
-hosts_to_bootstrap: infx01-ds1, ppm01-ds1
+#hosts_to_bootstrap: infx01-ds1, ppm01-ds1
+hosts_to_bootstrap: infx01-ds1
